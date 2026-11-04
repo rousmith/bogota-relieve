@@ -33,6 +33,13 @@ No hay `deepseek-chat` ni ningún modelo etiquetado explícitamente como "razona
 - `.github/workflows/deploy.yml`: `configure-pages@v6`, `upload-pages-artifact@v5` (publica `web/`) y `deploy-pages@v5`.
 - Sitio de Pages activado con `build_type=workflow`.
 
+## Verificación
+
+- Flujo: rama `feat/agentes-pipeline` → PR #1 → merge a `main` (fast-forward). No hubo push directo a `main`.
+- Pages activado antes del merge: `gh api -X POST repos/rousmith/bogota-relieve/pages -f build_type=workflow` → `build_type: workflow`, `html_url: https://rousmith.github.io/bogota-relieve/`.
+- Run `41769291175` (`deploy`, `main`, evento `push`): **success** en 22 s. Los cuatro pasos (`configure-pages@v6`, `upload-pages-artifact@v5`, `deploy-pages@v5`) terminaron en verde.
+- `https://rousmith.github.io/bogota-relieve/` responde HTTP 200 y contiene `<h1>Hola Bogotá</h1>`.
+
 ## Decisiones de modelo
 
 - **Subagentes:** `opencode/deepseek-v4.1-flash-free` sin variante. Es el modelo que ejecuta esta sesión, el más barato del catálogo (coste 0) y el que pide `AGENTS.md` para escribir y ejecutar.
