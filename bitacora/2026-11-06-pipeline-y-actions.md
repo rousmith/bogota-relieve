@@ -51,6 +51,9 @@ El workflow `.github/workflows/deploy.yml` instala las dependencias en Ubuntu
   `python3`; además, la URL y el filtro quedan comprobados en CI.
 - Se comprobó que una tesela no cubre Bogotá completa. La etapa 01 se amplió a
   cuatro teselas y la etapa 02 vuelve a verificar la cobertura antes de operar.
+- El primer run de Actions (`42385957464`) falló al validar el CRS porque
+  `gdalsrsinfo -o epsg` imprime una línea vacía antes de `EPSG:4326`. Se cambió
+  `head -n1` por una búsqueda explícita de la primera línea `EPSG:`.
 
 ## Tokens y costo
 

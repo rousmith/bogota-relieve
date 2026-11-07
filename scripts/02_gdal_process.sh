@@ -217,7 +217,9 @@ for dem in "${DEM_FILES[@]}"; do
         error "GDAL no puede abrir el DEM: $dem"
         exit 1
     fi
-    srs_dem="$(gdalsrsinfo -o epsg "$dem" 2>/dev/null | tr -d '\r' | head -n1 || true)"
+    # gdalsrsinfo suele anteponer una línea vacía; tomamos la primera línea
+    # que contenga realmente un identificador EPSG.
+    srs_dem="$(gdalsrsinfo -o epsg "$dem" 2>/dev/null | tr -d '\r' | grep -m1 '^EPSG:' || true)"
     if [ "$srs_dem" != "EPSG:4326" ]; then
         error "el DEM $dem debe estar en EPSG:4326 (detectado: ${srs_dem:-desconocido})."
         echo "       Esta etapa espera las teselas COG de Copernicus GLO-30." >&2
