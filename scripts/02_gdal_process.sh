@@ -847,7 +847,7 @@ for fichero in "${SALIDAS[@]}"; do
     fi
 done
 
-SRS_SALIDA="$(gdalsrsinfo -o epsg "$DEM_RECORTADO" 2>/dev/null | tr -d '\r' | head -n1 || true)"
+SRS_SALIDA="$(gdalsrsinfo -o epsg "$DEM_RECORTADO" 2>/dev/null | tr -d '\r' | grep -m1 '^EPSG:' || true)"
 if [ "$SRS_SALIDA" != "EPSG:9377" ]; then
     error "el DEM recortado no quedó en EPSG:9377 (detectado: ${SRS_SALIDA:-desconocido})."
     exit 1

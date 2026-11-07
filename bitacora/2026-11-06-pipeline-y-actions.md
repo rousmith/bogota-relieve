@@ -61,6 +61,9 @@ El workflow `.github/workflows/deploy.yml` instala las dependencias en Ubuntu
 - El tercer run (`42386589207`) mostró que los extents se expresan por centros
   de píxel y quedan unos metros dentro del grado nominal. Se añadió una
   tolerancia de 0,001° (menor que una tesela y mayor que medio píxel GLO-30).
+- El cuarto run (`42387022283`) completó las ocho fases GDAL; la última
+  validación de CRS conservaba el antiguo `head -n1`. Se aplicó allí la misma
+  búsqueda explícita de `EPSG:` usada al validar las entradas.
 
 ## Tokens y costo
 
