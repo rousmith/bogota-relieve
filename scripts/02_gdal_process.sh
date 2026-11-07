@@ -369,6 +369,10 @@ lon_min, lat_min, lon_max, lat_max = map(float, sys.argv[1:5])
 rutas = sys.argv[5:]
 
 # Extents reales de las teselas locales (no se fía del nombre del archivo).
+# Algunas compilaciones de GDAL 3 respetan el orden de ejes oficial de
+# EPSG:4326 (latitud, longitud) al serializar cornerCoordinates, mientras otras
+# entregan el orden GIS tradicional (longitud, latitud). Guardamos ambos
+# candidatos y la comparación con el bbox escogerá el que corresponda.
 extents = []
 for ruta in rutas:
     salida = subprocess.run(
@@ -383,14 +387,14 @@ for ruta in rutas:
     lr = cc.get("lowerRight") or [None, None]
     if ul[0] is None or lr[0] is None:
         raise SystemExit(f"sin cornerCoordinates en {ruta}")
-    extents.append(
-        (
-            min(ul[0], lr[0]),
-            min(ul[1], lr[1]),
-            max(ul[0], lr[0]),
-            max(ul[1], lr[1]),
-        )
+    normal = (
+        min(ul[0], lr[0]),
+        min(ul[1], lr[1]),
+        max(ul[0], lr[0]),
+        max(ul[1], lr[1]),
     )
+    extents.append(normal)
+    extents.append((normal[1], normal[0], normal[3], normal[2]))
 
 TOL = 1e-8
 
@@ -475,15 +479,24 @@ datos = json.loads(
 cc = datos["cornerCoordinates"]
 ul = cc["upperLeft"]
 lr = cc["lowerRight"]
-vxmin, vxmax = min(ul[0], lr[0]), max(ul[0], lr[0])
-vymin, vymax = min(ul[1], lr[1]), max(ul[1], lr[1])
+normal = (min(ul[0], lr[0]), min(ul[1], lr[1]), max(ul[0], lr[0]), max(ul[1], lr[1]))
+candidatos = [normal, (normal[1], normal[0], normal[3], normal[2])]
 tol = 1e-8
-if not (vxmin <= lon_min + tol and vymin <= lat_min + tol and vxmax >= lon_max - tol and vymax >= lat_max - tol):
+elegido = next(
+    (
+        e for e in candidatos
+        if e[0] <= lon_min + tol and e[1] <= lat_min + tol
+        and e[2] >= lon_max - tol and e[3] >= lat_max - tol
+    ),
+    None,
+)
+if elegido is None:
     raise SystemExit(
         "el VRT no cubre el bbox del límite: "
-        f"VRT=({vxmin:.6f},{vymin:.6f},{vxmax:.6f},{vymax:.6f}) "
+        f"VRT={normal} "
         f"límite=({lon_min:.6f},{lat_min:.6f},{lon_max:.6f},{lat_max:.6f})"
     )
+vxmin, vymin, vxmax, vymax = elegido
 print(f"    Cobertura verificada: VRT {vxmin:.6f} {vymin:.6f} {vxmax:.6f} {vymax:.6f}")
 PY
 

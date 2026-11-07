@@ -54,6 +54,10 @@ El workflow `.github/workflows/deploy.yml` instala las dependencias en Ubuntu
 - El primer run de Actions (`42385957464`) falló al validar el CRS porque
   `gdalsrsinfo -o epsg` imprime una línea vacía antes de `EPSG:4326`. Se cambió
   `head -n1` por una búsqueda explícita de la primera línea `EPSG:`.
+- El segundo run (`42386283050`) encontró las cuatro teselas, pero interpretó
+  los ejes de `cornerCoordinates` como latitud/longitud y declaró cobertura
+  ausente. La validación ahora admite tanto el orden oficial de EPSG:4326 como
+  el orden GIS tradicional longitud/latitud.
 
 ## Tokens y costo
 
