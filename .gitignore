@@ -1,5 +1,25 @@
+# ---------------------------------------------------------------------------
+# Datos crudos: NO se versionan.
+# El DEM (~43 MB) y el límite (~110 KB) son 100 % regenerables con
+# `bash scripts/01_download.sh`, y los datos grandes no deben vivir en git
+# (GitHub rechaza archivos de más de 100 MB). El .gitkeep mantiene el
+# directorio en el clon.
+# ---------------------------------------------------------------------------
+data/*.tif
+data/*.geojson
+data/*.zip
+!data/.gitkeep
+
+# ---------------------------------------------------------------------------
+# Intermedios y salidas del pipeline (heightmap, textura, póster, .glb).
+# Se regeneran con las etapas 02-04; el visor publicado vive en web/.
+# ---------------------------------------------------------------------------
 output/*
 !output/.gitkeep
+
+# ---------------------------------------------------------------------------
+# Basura de entorno
+# ---------------------------------------------------------------------------
 __pycache__/
 *.pyc
 .env

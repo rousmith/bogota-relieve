@@ -1,7 +1,9 @@
-name: deploy
+name: construir-y-publicar
 
 on:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
   workflow_dispatch:
 
@@ -11,20 +13,83 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  pipeline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Validar sintaxis
+        run: |
+          bash -n scripts/*.sh
+          python3 -m py_compile scripts/03_qgis_poster.py scripts/04_blender_relief.py
+
+      - name: Instalar GDAL, QGIS y Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gdal-bin python3 qgis python3-qgis fonts-dejavu-core blender
+          gdalinfo --version
+          python3 -c 'import qgis.core; print("QGIS", qgis.core.Qgis.QGIS_VERSION)'
+          blender --version | head -n 1
+
+      - name: Descargar datos
+        run: bash scripts/01_download.sh
+
+      - name: Procesar relieve con GDAL
+        run: bash scripts/02_gdal_process.sh --sin-remoto --max-px 1024
+
+      - name: Crear póster con QGIS offscreen
+        run: bash scripts/03_qgis_poster.sh
+
+      - name: Crear GLB con Blender batch
+        run: bash scripts/04_blender_relief.sh --resolucion 384 --exageracion 2 --muestras 32
+
+      - name: Preparar visor
+        run: |
+          cp output/bogota_relieve.glb web/bogota_relieve.glb
+          cp output/bogota_relieve.png web/bogota_relieve.png
+          cp output/poster_bogota.pdf web/poster_bogota.pdf
+          cp output/poster_bogota.png web/poster_bogota.png
+          test "$(stat -c %s web/bogota_relieve.glb)" -lt $((25 * 1024 * 1024))
+          grep -q 'bogota_relieve.glb' web/index.html
+          find web -maxdepth 1 -type f -printf '%f %k KiB\n' | sort
+
+      - name: Guardar productos del pipeline
+        uses: actions/upload-artifact@v4
+        with:
+          name: productos-bogota
+          path: |
+            output/bogota_relieve.glb
+            output/bogota_relieve.png
+            output/poster_bogota.pdf
+            output/poster_bogota.png
+            output/*_relieve.json
+            output/relieve_bogota.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v6
+
+      - name: Empaquetar GitHub Pages
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: web
+
   deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: pipeline
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v6
-      - uses: actions/upload-pages-artifact@v5
-        with:
-          path: web
-      - id: deployment
+      - name: Publicar en GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v5

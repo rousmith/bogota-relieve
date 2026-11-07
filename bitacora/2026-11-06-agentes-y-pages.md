@@ -1,6 +1,6 @@
-# 2026-11-03 — Agentes del pipeline y primer despliegue a Pages
+# 2026-11-06 — Agentes del pipeline y primer despliegue a Pages
 
-- **Fecha:** 2026-11-03
+- **Fecha:** 2026-11-06
 - **Agente:** build (primario) + subagentes del proyecto
 - **Modelo:** `opencode/deepseek-v4.1-flash-free` (variante `#high` solo en `planner`)
 

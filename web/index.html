@@ -3,27 +3,233 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Bogotá en relieve</title>
+    <meta name="description" content="Relieve 3D interactivo de Bogotá construido con Copernicus DEM, QGIS y Blender." />
+    <title>Bogotá sobre el nivel del mar</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
     <style>
-      :root { color-scheme: dark; }
+      :root {
+        color-scheme: dark;
+        --ink: #101a19;
+        --panel: #172523;
+        --paper: #e8eadc;
+        --muted: #aeb9ae;
+        --contour: rgba(232, 234, 220, 0.14);
+        --moss: #91ad72;
+        --clay: #c58a57;
+        --snow: #f8f4e8;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body { min-height: 100%; }
+
       body {
         margin: 0;
+        background: var(--ink);
+        color: var(--paper);
+        font-family: "Segoe UI", Arial, sans-serif;
+      }
+
+      .shell {
         min-height: 100vh;
         display: grid;
-        place-items: center;
-        background: #0f1115;
-        color: #f2f4f8;
-        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        grid-template-columns: minmax(17rem, 24rem) minmax(0, 1fr);
       }
-      main { text-align: center; padding: 2rem; }
-      h1 { font-size: clamp(2rem, 8vw, 4.5rem); margin: 0 0 0.5rem; letter-spacing: -0.02em; }
-      p { margin: 0; color: #9aa3b2; }
+
+      .info {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        padding: clamp(1.5rem, 4vw, 3.5rem);
+        background: var(--panel);
+        border-right: 1px solid var(--contour);
+      }
+
+      .mark {
+        width: 2.4rem;
+        height: 2.4rem;
+        border: 1px solid var(--moss);
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        color: var(--moss);
+        font-weight: 700;
+      }
+
+      h1 {
+        max-width: 8ch;
+        margin: auto 0 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(3rem, 7vw, 6.5rem);
+        font-weight: 400;
+        line-height: 0.86;
+        letter-spacing: -0.055em;
+      }
+
+      .intro {
+        max-width: 34rem;
+        margin: 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+
+      .facts {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1px;
+        margin: 0;
+        background: var(--contour);
+        border: 1px solid var(--contour);
+      }
+
+      .facts div { padding: 0.85rem; background: var(--panel); }
+      dt { color: var(--muted); font-size: 0.75rem; }
+      dd { margin: 0.2rem 0 0; font-weight: 650; }
+
+      .links { display: flex; flex-wrap: wrap; gap: 0.8rem 1.2rem; }
+      a { color: var(--paper); text-underline-offset: 0.25em; }
+      a:hover { color: var(--moss); }
+
+      .stage {
+        position: relative;
+        min-height: 100vh;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 70% 40%, rgba(145, 173, 114, 0.15), transparent 34%),
+          repeating-radial-gradient(ellipse at 62% 52%, transparent 0 42px, var(--contour) 43px 44px),
+          var(--ink);
+      }
+
+      model-viewer {
+        width: 100%;
+        height: 100vh;
+        --poster-color: transparent;
+      }
+
+      .progress {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: min(22rem, 70%);
+        transform: translate(-50%, -50%);
+        text-align: center;
+        pointer-events: none;
+      }
+
+      .progress p { margin: 0 0 0.75rem; color: var(--muted); }
+      .track { height: 2px; background: var(--contour); }
+      .bar { display: block; width: 0; height: 100%; background: var(--moss); transition: width 180ms linear; }
+      model-viewer.loaded .progress { display: none; }
+
+      .hint {
+        position: absolute;
+        right: 1.5rem;
+        bottom: 1.5rem;
+        margin: 0;
+        padding: 0.6rem 0.8rem;
+        color: var(--paper);
+        background: rgba(16, 26, 25, 0.78);
+        border: 1px solid var(--contour);
+        font-size: 0.8rem;
+        backdrop-filter: blur(8px);
+      }
+
+      .error {
+        display: none;
+        position: absolute;
+        inset: 50% auto auto 50%;
+        width: min(32rem, calc(100% - 3rem));
+        transform: translate(-50%, -50%);
+        padding: 1.25rem;
+        color: var(--paper);
+        background: #3a2420;
+        border-left: 4px solid var(--clay);
+        line-height: 1.5;
+      }
+
+      .stage.has-error .error { display: block; }
+      .stage.has-error model-viewer { visibility: hidden; }
+
+      :focus-visible { outline: 3px solid var(--moss); outline-offset: 4px; }
+
+      @media (max-width: 760px) {
+        .shell { display: block; }
+        .info { min-height: auto; border-right: 0; border-bottom: 1px solid var(--contour); }
+        h1 { margin-top: 2rem; font-size: clamp(3.5rem, 19vw, 5.5rem); }
+        .stage, model-viewer { min-height: 68vh; height: 68vh; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .bar { transition: none; }
+        model-viewer { --min-hotspot-opacity: 1; }
+      }
     </style>
   </head>
   <body>
-    <main>
-      <h1>Hola Bogotá</h1>
-      <p>Visor de relieve 3D en construcción.</p>
+    <main class="shell">
+      <section class="info" aria-labelledby="titulo">
+        <div class="mark" aria-hidden="true">4°</div>
+        <h1 id="titulo">Bogotá en relieve</h1>
+        <p class="intro">
+          Explora la forma de la capital desde la sabana hasta los cerros.
+          Arrastra para girar, desplaza para acercarte y usa dos dedos en móvil.
+        </p>
+        <dl class="facts">
+          <div><dt>Superficie</dt><dd>Copernicus GLO-30</dd></div>
+          <div><dt>Referencia</dt><dd>EPSG:9377</dd></div>
+          <div><dt>Procesamiento</dt><dd>GDAL + QGIS</dd></div>
+          <div><dt>Modelo</dt><dd>Blender / GLB</dd></div>
+        </dl>
+        <nav class="links" aria-label="Material complementario">
+          <a href="poster_bogota.pdf">Ver póster cartográfico</a>
+          <a href="https://github.com/rousmith/bogota-relieve">Código y bitácora</a>
+        </nav>
+      </section>
+
+      <section class="stage" id="stage" aria-label="Modelo tridimensional interactivo de Bogotá">
+        <model-viewer
+          id="relieve"
+          src="bogota_relieve.glb"
+          alt="Modelo tridimensional coloreado del relieve de Bogotá"
+          camera-controls
+          touch-action="pan-y"
+          auto-rotate
+          auto-rotate-delay="2500"
+          rotation-per-second="8deg"
+          shadow-intensity="0.8"
+          shadow-softness="0.7"
+          exposure="1"
+          interaction-prompt="auto"
+          loading="eager">
+          <div class="progress" slot="progress-bar" aria-live="polite">
+            <p id="estado">Cargando el relieve…</p>
+            <div class="track"><span class="bar" id="bar"></span></div>
+          </div>
+        </model-viewer>
+        <p class="hint">Arrastra para recorrer el terreno</p>
+        <div class="error" role="alert">
+          <strong>El modelo 3D no está disponible.</strong><br />
+          El archivo <code>bogota_relieve.glb</code> debe generarse con el pipeline antes de publicar el sitio.
+        </div>
+      </section>
     </main>
+
+    <script>
+      const viewer = document.querySelector("#relieve");
+      const stage = document.querySelector("#stage");
+      const bar = document.querySelector("#bar");
+      const estado = document.querySelector("#estado");
+
+      viewer.addEventListener("progress", (event) => {
+        const pct = Math.round(event.detail.totalProgress * 100);
+        bar.style.width = `${pct}%`;
+        estado.textContent = `Cargando el relieve… ${pct}%`;
+      });
+      viewer.addEventListener("load", () => viewer.classList.add("loaded"));
+      viewer.addEventListener("error", () => stage.classList.add("has-error"));
+    </script>
   </body>
 </html>
