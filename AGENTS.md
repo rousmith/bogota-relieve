@@ -15,9 +15,27 @@ Mapa de relieve 3D de Bogotá generado por un pipeline 100 % headless y publicad
 
 ## Estado actual
 
-- El pipeline **no está implementado**. `scripts/`, `data/`, `output/`, `web/` y `.opencode/agents/` están vacías; solo existen este archivo y un `bitacora/README.md` vacío. La estructura de abajo es el objetivo, no código existente.
-- No hay manifiesto de dependencias ni CI todavía: al agregar el primero, documentar aquí el comando exacto de instalación y ejecución.
-- Git no versiona directorios vacíos: si `data/` u `output/` deben sobrevivir a un clon, agregar un placeholder (y decidir si van en `.gitignore`).
+- Pipeline implementado en `scripts/01_download.sh` a `scripts/04_blender_relief.sh`.
+- Visor `<model-viewer>` en `web/index.html` y CI/CD en `.github/workflows/deploy.yml`.
+- `data/` y `output/` conservan `.gitkeep`; las entradas y salidas generadas están ignoradas por Git.
+- La validación funcional completa se ejecuta en Ubuntu 24.04 mediante GitHub Actions.
+
+Instalación exacta en Ubuntu headless:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y --no-install-recommends \
+  gdal-bin python3 qgis python3-qgis fonts-dejavu-core blender
+```
+
+Ejecución exacta:
+
+```bash
+bash scripts/01_download.sh
+bash scripts/02_gdal_process.sh --sin-remoto --max-px 1024
+bash scripts/03_qgis_poster.sh
+bash scripts/04_blender_relief.sh --resolucion 384 --exageracion 2 --muestras 32
+```
 
 ## Estructura y orden del pipeline
 
