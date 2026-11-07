@@ -58,6 +58,9 @@ El workflow `.github/workflows/deploy.yml` instala las dependencias en Ubuntu
   los ejes de `cornerCoordinates` como latitud/longitud y declaró cobertura
   ausente. La validación ahora admite tanto el orden oficial de EPSG:4326 como
   el orden GIS tradicional longitud/latitud.
+- El tercer run (`42386589207`) mostró que los extents se expresan por centros
+  de píxel y quedan unos metros dentro del grado nominal. Se añadió una
+  tolerancia de 0,001° (menor que una tesela y mayor que medio píxel GLO-30).
 
 ## Tokens y costo
 

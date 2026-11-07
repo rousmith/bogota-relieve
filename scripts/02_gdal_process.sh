@@ -396,7 +396,11 @@ for ruta in rutas:
     extents.append(normal)
     extents.append((normal[1], normal[0], normal[3], normal[2]))
 
-TOL = 1e-8
+# Copernicus GLO-30 usa una rejilla pixel-is-point: gdalinfo puede declarar el
+# extent por los centros del primer/último píxel, unos 15 m dentro del grado
+# nominal. 0,001° (~111 m) tolera esa convención sin confundir otra tesela.
+BBOX_TOL = 1e-8
+EDGE_TOL = 0.001
 
 
 def nombre_tesela(lat, lon):
@@ -406,19 +410,19 @@ def nombre_tesela(lat, lon):
 
 
 # Celdas [lat, lat+1) x [lon, lon+1) que intersectan el bbox.
-lat0 = math.floor(lat_min + TOL)
-lat1 = math.ceil(lat_max - TOL) - 1
-lon0 = math.floor(lon_min + TOL)
-lon1 = math.ceil(lon_max - TOL) - 1
+lat0 = math.floor(lat_min + BBOX_TOL)
+lat1 = math.ceil(lat_max - BBOX_TOL) - 1
+lon0 = math.floor(lon_min + BBOX_TOL)
+lon1 = math.ceil(lon_max - BBOX_TOL) - 1
 
 for lat in range(lat0, lat1 + 1):
     for lon in range(lon0, lon1 + 1):
         celda = (lon, lat, lon + 1, lat + 1)
         cubierta = any(
-            e[0] <= celda[0] + TOL
-            and e[1] <= celda[1] + TOL
-            and e[2] >= celda[2] - TOL
-            and e[3] >= celda[3] - TOL
+            e[0] <= celda[0] + EDGE_TOL
+            and e[1] <= celda[1] + EDGE_TOL
+            and e[2] >= celda[2] - EDGE_TOL
+            and e[3] >= celda[3] - EDGE_TOL
             for e in extents
         )
         print(("R" if cubierta else "M"), nombre_tesela(lat, lon))
