@@ -41,6 +41,26 @@ El workflow `.github/workflows/deploy.yml` instala las dependencias en Ubuntu
 - Las otras tres URLs respondieron HTTP 200 y declararon tamaños menores de
   44 MB cada una.
 
+## Verificación en GitHub Actions
+
+El run [`42387313602`](https://github.com/rousmith/bogota-relieve/actions/runs/42387313602)
+terminó correctamente en **2 min 22 s** con Ubuntu 24.04:
+
+- GDAL 3.8.4: cuatro teselas, recorte y derivados en EPSG:9377.
+- QGIS 3.34.4-Prizren en modo `offscreen`: póster PNG de 2,36 MB y PDF de
+  0,65 MB.
+- Blender 4.0.2 en modo batch/Cycles CPU: render 1600×1200 y GLB glTF 2.0 de
+  **2.151.256 bytes (2,05 MB)**, muy por debajo del límite de 25 MiB.
+- Malla: 77.494 vértices, 65.752 triángulos y textura 848×2048.
+- Los productos se guardaron como artefacto `productos-bogota` y el contenido
+  completo de `web/` se empaquetó correctamente para GitHub Pages.
+
+Se descargaron y revisaron visualmente el render 3D y el póster: ambos muestran
+el límite completo de Bogotá, relieve texturizado, norte, escala y leyenda.
+Después del éxito se actualizaron `actions/checkout` y `actions/upload-artifact`
+a sus versiones mayores actuales con runtime Node.js 24 para retirar el aviso
+de obsolescencia observado en el run.
+
 ## Errores y cómo se resolvieron
 
 - El equipo Windows no tiene GDAL, QGIS, Blender, Python, Docker ni WSL. La

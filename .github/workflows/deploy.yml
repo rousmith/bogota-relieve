@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Descargar repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Validar sintaxis
         run: |
@@ -61,7 +61,7 @@ jobs:
           find web -maxdepth 1 -type f -printf '%f %k KiB\n' | sort
 
       - name: Guardar productos del pipeline
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: productos-bogota
           path: |
